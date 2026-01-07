@@ -1,0 +1,14 @@
+{% extends "courses/base.html" %}
+{% block title %}Create Lesson{% endblock %}
+{% block topbar_left %}Create Lesson{% endblock %}
+
+{% block content %}
+  <div class="row justify-content-center">
+    <div class="col-lg-7">
+      <h2 class="mb-1">Create New Lesson</h2>
+      <p class="text-muted mb-3">Unit: {{ unit.title }}</p>
+
+      {% include "courses/_bs_form.html" with cancel_url=cancel_url submit_text="Create Lesson" %}
+    </div>
+  </div>
+{% endblock %}
