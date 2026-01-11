@@ -40,7 +40,7 @@ INSTALLED_APPS = [
     'courses',
     'enrollments',
     'exams',
-
+    'tinymce',
 ]
 
 STATIC_URL = "static/"

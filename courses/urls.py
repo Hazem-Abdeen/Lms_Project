@@ -1,4 +1,4 @@
-from django.urls import path
+from django.urls import path, include
 from . import views
 
 app_name = "courses"
@@ -15,4 +15,6 @@ urlpatterns = [
     # lessons (inside unit)
     path("units/<int:unit_id>/lessons/", views.LessonListView.as_view(), name="lesson-list"),
     path("units/<int:unit_id>/lessons/create/", views.LessonCreateView.as_view(), name="lesson-create"),
+
+    path("tinymce/", include("tinymce.urls")),
 ]

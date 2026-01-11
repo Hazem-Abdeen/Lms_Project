@@ -1,4 +1,5 @@
 from django.db import models
+from tinymce.models import HTMLField
 
 
 class Course(models.Model):
@@ -25,7 +26,7 @@ class Lesson(models.Model):
     unit = models.ForeignKey(Unit, on_delete=models.CASCADE, related_name="lessons")
     title = models.CharField(max_length=200)
     order = models.PositiveSmallIntegerField()
-    content = models.TextField()  # you can store HTML here
+    content = HTMLField()
 
     class Meta:
         ordering = ["order"]
