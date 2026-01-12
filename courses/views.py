@@ -1,7 +1,9 @@
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
 from django.views.generic import ListView, CreateView
+
 from .models import Course, Unit, Lesson
+from .forms import CourseForm, UnitForm, LessonForm
 
 
 class CourseListView(ListView):
@@ -12,7 +14,7 @@ class CourseListView(ListView):
 
 class CourseCreateView(CreateView):
     model = Course
-    fields = ["name", "grade"]
+    form_class = CourseForm
     template_name = "courses/course_form.html"
 
     def get_success_url(self):
@@ -22,12 +24,6 @@ class CourseCreateView(CreateView):
         ctx = super().get_context_data(**kwargs)
         ctx["cancel_url"] = reverse("courses:course-list")
         return ctx
-
-    def get_form(self, form_class=None):
-        form = super().get_form(form_class)
-        for name, field in form.fields.items():
-            field.widget.attrs["class"] = "form-control"
-        return form
 
 
 class UnitListView(ListView):
@@ -48,7 +44,7 @@ class UnitListView(ListView):
 
 class UnitCreateView(CreateView):
     model = Unit
-    fields = ["title", "order"]
+    form_class = UnitForm
     template_name = "courses/unit_form.html"
 
     def dispatch(self, request, *args, **kwargs):
@@ -67,12 +63,6 @@ class UnitCreateView(CreateView):
         ctx["course"] = self.course
         ctx["cancel_url"] = reverse("courses:unit-list", args=[self.course.id])
         return ctx
-
-    def get_form(self, form_class=None):
-        form = super().get_form(form_class)
-        for name, field in form.fields.items():
-            field.widget.attrs["class"] = "form-control"
-        return form
 
 
 class LessonListView(ListView):
@@ -93,7 +83,7 @@ class LessonListView(ListView):
 
 class LessonCreateView(CreateView):
     model = Lesson
-    fields = ["title", "order", "content"]
+    form_class = LessonForm
     template_name = "courses/lesson_form.html"
 
     def dispatch(self, request, *args, **kwargs):
@@ -113,9 +103,3 @@ class LessonCreateView(CreateView):
         ctx["course"] = self.unit.course
         ctx["cancel_url"] = reverse("courses:lesson-list", args=[self.unit.id])
         return ctx
-
-    def get_form(self, form_class=None):
-        form = super().get_form(form_class)
-        for name, field in form.fields.items():
-            field.widget.attrs["class"] = "form-control"
-        return form

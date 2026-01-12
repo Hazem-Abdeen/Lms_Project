@@ -1,13 +1,22 @@
-<form method="post" class="card">
+<form method="post" class="card" novalidate>
   {% csrf_token %}
+
+  {# REQUIRED: TinyMCE / widget JS & CSS #}
+  {{ form.media }}
+
   <div class="card-body">
     {% for field in form %}
       <div class="mb-3">
-        <label class="form-label">{{ field.label }}</label>
+        <label class="form-label" for="{{ field.id_for_label }}">
+          {{ field.label }}
+        </label>
+
         {{ field }}
+
         {% if field.help_text %}
           <div class="form-text">{{ field.help_text }}</div>
         {% endif %}
+
         {% for error in field.errors %}
           <div class="text-danger small">{{ error }}</div>
         {% endfor %}
@@ -16,7 +25,11 @@
   </div>
 
   <div class="card-footer d-flex justify-content-end gap-2">
-    <a class="btn btn-outline-secondary" href="{{ cancel_url }}">Cancel</a>
-    <button class="btn btn-primary" type="submit">{{ submit_text }}</button>
+    {% if cancel_url %}
+      <a class="btn btn-outline-secondary" href="{{ cancel_url }}">Cancel</a>
+    {% endif %}
+    <button class="btn btn-primary" type="submit">
+      {{ submit_text|default:"Save" }}
+    </button>
   </div>
 </form>
