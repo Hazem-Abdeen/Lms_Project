@@ -1,0 +1,28 @@
+{% extends "courses/base.html" %}
+
+{% block title %}Exam Details{% endblock %}
+{% block topbar_left %}Exam Details{% endblock %}
+
+{% block content %}
+  <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+    <div>
+      <h2 class="mb-0">{{ exam.title }}</h2>
+      <div class="text-muted">
+        Course: {{ exam.course.name }} • Total Marks: {{ exam.total_marks|default:"-" }}
+      </div>
+    </div>
+
+    <div class="d-flex gap-2">
+      <a class="btn btn-outline-primary" href="{% url 'exams:exam_update' exam.id %}">Edit</a>
+      <a class="btn btn-outline-danger" href="{% url 'exams:exam_delete' exam.id %}">Delete</a>
+      <a class="btn btn-outline-secondary" href="{% url 'exams:exam_list' %}">Back</a>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-body">
+      <h5 class="mb-2">Questions</h5>
+      <div class="text-muted">Next: add questions CRUD here.</div>
+    </div>
+  </div>
+{% endblock %}

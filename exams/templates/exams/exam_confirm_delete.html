@@ -1,0 +1,24 @@
+{% extends "courses/base.html" %}
+
+{% block title %}Delete Exam{% endblock %}
+{% block topbar_left %}Delete Exam{% endblock %}
+
+{% block content %}
+  <div class="card">
+    <div class="card-body">
+      <h4 class="mb-2">Delete “{{ exam.title }}”?</h4>
+      <p class="text-muted mb-0">
+        This will permanently delete the exam and all its questions and choices.
+      </p>
+    </div>
+
+    <div class="card-footer d-flex justify-content-end gap-2">
+      <a class="btn btn-outline-secondary" href="{% url 'exams:exam_detail' exam.id %}">Cancel</a>
+
+      <form method="post">
+        {% csrf_token %}
+        <button class="btn btn-danger" type="submit">Delete</button>
+      </form>
+    </div>
+  </div>
+{% endblock %}

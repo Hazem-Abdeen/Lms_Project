@@ -1,8 +1,59 @@
-from django.contrib.auth.decorators import login_required
-from django.shortcuts import render
-from .models import Exam
+from django.urls import reverse_lazy
+from django.views.generic import ListView, CreateView, UpdateView, DeleteView, DetailView
+from django.contrib.auth.mixins import LoginRequiredMixin
 
-@login_required
-def exam_list(request):
-    exams = Exam.objects.select_related("course").all().order_by("-id")
-    return render(request, "exams/exam_list.html", {"exams": exams})
+from .models import Exam
+from .forms import ExamForm
+
+class ExamListView(LoginRequiredMixin, ListView):
+    model = Exam
+    template_name = "exams/exam_list.html"
+    context_object_name = "exams"
+    ordering = ["-id"]
+
+    def get_queryset(self):
+        return Exam.objects.select_related("course").all().order_by("-id")
+
+
+class ExamCreateView(LoginRequiredMixin, CreateView):
+    model = Exam
+    form_class = ExamForm
+    template_name = "exams/exam_form.html"
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx["mode"] = "create"
+        return ctx
+
+    def get_success_url(self):
+        return reverse_lazy("exams:exam_detail", kwargs={"pk": self.object.pk})
+
+
+class ExamUpdateView(LoginRequiredMixin, UpdateView):
+    model = Exam
+    form_class = ExamForm
+    template_name = "exams/exam_form.html"
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx["mode"] = "edit"
+        ctx["exam"] = self.object
+        return ctx
+
+    def get_success_url(self):
+        return reverse_lazy("exams:exam_detail", kwargs={"pk": self.object.pk})
+
+
+class ExamDeleteView(LoginRequiredMixin, DeleteView):
+    model = Exam
+    template_name = "exams/exam_confirm_delete.html"
+    success_url = reverse_lazy("exams:exam_list")
+
+
+class ExamDetailView(LoginRequiredMixin, DetailView):
+    model = Exam
+    template_name = "exams/exam_detail.html"
+    context_object_name = "exam"
+
+    def get_queryset(self):
+        return Exam.objects.select_related("course")

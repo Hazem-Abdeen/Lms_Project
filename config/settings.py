@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'enrollments',
     'exams',
     'tinymce',
+    'django_extensions',
 ]
 
 STATIC_URL = "static/"
