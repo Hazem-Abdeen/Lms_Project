@@ -29,18 +29,25 @@
     </div>
 
     <nav class="sidebar-nav">
-      <a class="sidebar-link {% if request.resolver_match.url_name == 'course-list' %}active{% endif %}"
-         href="{% url 'courses:course-list' %}">
-        <i class="bi bi-book"></i>
-        <span>Courses</span>
-      </a>
+  <a class="sidebar-link {% if request.resolver_match.namespace == 'courses' %}active{% endif %}"
+     href="{% url 'courses:course-list' %}">
+    <i class="bi bi-book"></i>
+    <span>Courses</span>
+  </a>
 
-      <div class="sidebar-section">SETTINGS</div>
-      <a class="sidebar-link" href="#">
-        <i class="bi bi-gear"></i>
-        <span>Configuration</span>
-      </a>
-    </nav>
+  <a class="sidebar-link {% if request.resolver_match.namespace == 'exams' %}active{% endif %}"
+     href="{% url 'exams:exam-list' %}">
+    <i class="bi bi-clipboard-check"></i>
+    <span>Exams</span>
+  </a>
+
+  <div class="sidebar-section">SETTINGS</div>
+  <a class="sidebar-link" href="#">
+    <i class="bi bi-gear"></i>
+    <span>Configuration</span>
+  </a>
+</nav>
+
 
     <div class="sidebar-footer">
       <a class="sidebar-link danger" href="#">

@@ -1,0 +1,50 @@
+{% extends "courses/base.html" %}
+
+{% block title %}Exams{% endblock %}
+{% block topbar_left %}Exams{% endblock %}
+
+{% block content %}
+  <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+    <div>
+      <h2 class="mb-0">Exams</h2>
+      <div class="text-muted">Here you can manage your exams.</div>
+    </div>
+
+    <a class="btn btn-primary btn-primary-soft px-4 py-2 rounded-3"
+    href="#">
+      <i class="bi bi-plus-lg me-2"></i>
+      Create New Exam
+    </a>
+  </div>
+
+  <div class="card">
+    <div class="card-body p-0">
+      <table class="table mb-0">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Course</th>
+            <th>Title</th>
+            <th>Total Marks</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for exam in exams %}
+            <tr>
+              <td>#{{ exam.id }}</td>
+              <td>{{ exam.course.name }}</td>
+              <td>{{ exam.title }}</td>
+              <td>{{ exam.total_marks|default:"-" }}</td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="4" class="text-center text-muted py-4">
+                No exams yet.
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+{% endblock %}
