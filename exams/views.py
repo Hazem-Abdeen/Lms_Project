@@ -1,9 +1,11 @@
+from django.shortcuts import get_object_or_404
 from django.urls import reverse_lazy
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView, DetailView
 from django.contrib.auth.mixins import LoginRequiredMixin
 
-from .models import Exam
-from .forms import ExamForm
+from .models import Exam, Question
+from .forms import ExamForm, QuestionForm
+
 
 class ExamListView(LoginRequiredMixin, ListView):
     model = Exam
@@ -57,3 +59,49 @@ class ExamDetailView(LoginRequiredMixin, DetailView):
 
     def get_queryset(self):
         return Exam.objects.select_related("course")
+
+class QuestionCreateView(LoginRequiredMixin, CreateView):
+    model = Question
+    form_class = QuestionForm
+    template_name = "exams/question_form.html"
+
+    def dispatch(self, request, *args, **kwargs):
+        self.exam = get_object_or_404(Exam, pk=self.kwargs["exam_id"])
+        return super().dispatch(request, *args, **kwargs)
+
+    def form_valid(self, form):
+        form.instance.exam = self.exam
+        return super().form_valid(form)
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx["exam"] = self.exam
+        ctx["mode"] = "create"
+        return ctx
+
+    def get_success_url(self):
+        return reverse_lazy("exams:exam_detail", kwargs={"pk": self.exam.pk})
+
+
+class QuestionUpdateView(LoginRequiredMixin, UpdateView):
+    model = Question
+    form_class = QuestionForm
+    template_name = "exams/question_form.html"
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx["exam"] = self.object.exam
+        ctx["mode"] = "edit"
+        return ctx
+
+    def get_success_url(self):
+        return reverse_lazy("exams:exam_detail", kwargs={"pk": self.object.exam.pk})
+
+
+class QuestionDeleteView(LoginRequiredMixin, DeleteView):
+    model = Question
+    template_name = "exams/question_confirm_delete.html"
+
+    def get_success_url(self):
+        return reverse_lazy("exams:exam_detail", kwargs={"pk": self.object.exam.pk})
+

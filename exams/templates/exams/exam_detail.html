@@ -21,8 +21,34 @@
 
   <div class="card">
     <div class="card-body">
-      <h5 class="mb-2">Questions</h5>
-      <div class="text-muted">Next: add questions CRUD here.</div>
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="mb-0">Questions</h5>
+        <a class="btn btn-primary btn-sm"
+           href="{% url 'exams:question_create' exam.id %}">
+          + Add Question
+        </a>
+      </div>
+
+      {% if exam.questions.all %}
+        <div class="list-group">
+          {% for q in exam.questions.all %}
+            <div class="list-group-item d-flex justify-content-between align-items-start">
+              <div>
+                <div class="fw-semibold">Q{{ q.order }} — {{ q.mark }} marks</div>
+                <div class="text-muted">{{ q.text|truncatechars:120 }}</div>
+              </div>
+              <div class="d-flex gap-2">
+                <a class="btn btn-sm btn-outline-primary"
+                   href="{% url 'exams:question_update' q.id %}">Edit</a>
+                <a class="btn btn-sm btn-outline-danger"
+                   href="{% url 'exams:question_delete' q.id %}">Delete</a>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="text-muted">No questions yet.</div>
+      {% endif %}
     </div>
   </div>
 {% endblock %}

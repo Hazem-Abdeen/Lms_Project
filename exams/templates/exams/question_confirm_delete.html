@@ -1,0 +1,22 @@
+{% extends "courses/base.html" %}
+
+{% block title %}Delete Question{% endblock %}
+{% block topbar_left %}Delete Question{% endblock %}
+
+{% block content %}
+
+  <div class="card">
+    <div class="card-body">
+      <h4 class="mb-2">Delete this question?</h4>
+      <p class="text-muted mb-0">{{ object.text|truncatechars:160 }}</p>
+    </div>
+
+    <div class="card-footer d-flex justify-content-end gap-2">
+      <a class="btn btn-outline-secondary" href="{% url 'exams:exam_detail' object.exam.id %}">Cancel</a>
+      <form method="post">
+        {% csrf_token %}
+        <button class="btn btn-danger" type="submit">Delete</button>
+      </form>
+    </div>
+  </div>
+{% endblock %}
