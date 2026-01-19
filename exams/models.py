@@ -1,4 +1,5 @@
 from django.conf import settings
+from django.core.exceptions import ValidationError
 from django.db import models
 
 class Exam(models.Model):
@@ -29,11 +30,21 @@ class Question(models.Model):
 
 class AnswerChoice(models.Model):
     question = models.ForeignKey(Question, on_delete=models.CASCADE, related_name="choices")
-    text = models.TextField()
+    text = models.CharField(max_length=255)
     is_correct = models.BooleanField(default=False)
+
+    # every time this object is saved, run my logic too
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+
+        if self.is_correct and self.question_id:
+            AnswerChoice.objects.filter(
+                question_id=self.question_id
+            ).exclude(pk=self.pk).update(is_correct=False)
 
     def __str__(self):
         return self.text[:50]
+
 
 class ExamAttempt(models.Model):
     user = models.ForeignKey(

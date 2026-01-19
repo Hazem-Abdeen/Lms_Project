@@ -21,6 +21,8 @@
 
   <div class="card">
     <div class="card-body">
+
+      <!-- Questions header -->
       <div class="d-flex justify-content-between align-items-center mb-3">
         <h5 class="mb-0">Questions</h5>
         <a class="btn btn-primary btn-sm"
@@ -31,24 +33,85 @@
 
       {% if exam.questions.all %}
         <div class="list-group">
+
           {% for q in exam.questions.all %}
-            <div class="list-group-item d-flex justify-content-between align-items-start">
-              <div>
-                <div class="fw-semibold">Q{{ q.order }} — {{ q.mark }} marks</div>
-                <div class="text-muted">{{ q.text|truncatechars:120 }}</div>
+            <div class="list-group-item">
+
+              <!-- Question row -->
+              <div class="d-flex justify-content-between align-items-start">
+                <div>
+                  <div class="fw-semibold">
+                    Q{{ q.order }} — {{ q.mark }} marks
+                  </div>
+                  <div class="text-muted">
+                    {{ q.text|truncatechars:120 }}
+                  </div>
+                </div>
+
+                <div class="d-flex gap-2">
+                  <a class="btn btn-sm btn-outline-primary"
+                     href="{% url 'exams:question_update' q.id %}">Edit</a>
+                  <a class="btn btn-sm btn-outline-danger"
+                     href="{% url 'exams:question_delete' q.id %}">Delete</a>
+                </div>
               </div>
-              <div class="d-flex gap-2">
+
+              <hr class="my-3">
+
+              <!-- Answers -->
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <div class="text-muted small">Answers</div>
                 <a class="btn btn-sm btn-outline-primary"
-                   href="{% url 'exams:question_update' q.id %}">Edit</a>
-                <a class="btn btn-sm btn-outline-danger"
-                   href="{% url 'exams:question_delete' q.id %}">Delete</a>
+                   href="{% url 'exams:choice_create' q.id %}">
+                  + Add Answer
+                </a>
               </div>
+
+              {% if q.choices.all %}
+                <ul class="list-group list-group-flush">
+                  {% for c in q.choices.all %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                      <div>
+                        <span class="fw-semibold me-2">
+                          {% if forloop.counter == 1 %}A
+                          {% elif forloop.counter == 2 %}B
+                          {% elif forloop.counter == 3 %}C
+                          {% elif forloop.counter == 4 %}D
+                          {% else %}{{ forloop.counter }}
+                          {% endif %}.
+                        </span>
+
+                        {{ c.text }}
+
+                        {% if c.is_correct %}
+                          <span class="badge text-bg-success ms-2">Correct</span>
+                        {% endif %}
+                      </div>
+
+                      <div class="d-flex gap-2">
+                        <a class="btn btn-sm btn-outline-primary"
+                           href="{% url 'exams:choice_update' c.id %}">Edit</a>
+                        <form method="post" action="{% url 'exams:choice_delete' c.id %}" class="d-inline">
+                          {% csrf_token %}
+                          <button class="btn btn-sm btn-outline-danger" type="submit">Delete</button>
+                        </form>
+
+                      </div>
+                    </li>
+                  {% endfor %}
+                </ul>
+              {% else %}
+                <div class="text-muted small">No answers yet.</div>
+              {% endif %}
+
             </div>
           {% endfor %}
+
         </div>
       {% else %}
         <div class="text-muted">No questions yet.</div>
       {% endif %}
+
     </div>
   </div>
 {% endblock %}

@@ -25,3 +25,8 @@ class AnswerChoiceForm(BaseBootstrapModelForm):
     class Meta:
         model = AnswerChoice
         fields = ["text", "is_correct"]
+
+class ChoiceForm(BaseBootstrapModelForm):
+    class Meta:
+        model = AnswerChoice
+        fields = ["text", "is_correct"]
