@@ -14,7 +14,15 @@
 
       <div class="d-flex gap-2">
         <a class="btn btn-outline-secondary" href="{% url 'exams:exam_list' %}">Back</a>
+
+          <a href="{% url 'exams:attempt_start' exam.id %}"
+            class="btn btn-success">
+            Start Exam
+          </a>
       </div>
+
+
+
 
 {#    <div class="d-flex gap-2">#}
 {#      <a class="btn btn-outline-primary" href="{% url 'exams:exam_update' exam.id %}">Edit</a>#}

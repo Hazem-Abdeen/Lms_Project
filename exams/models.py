@@ -1,6 +1,8 @@
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import models
+from django.utils import timezone
+
 
 class Exam(models.Model):
     course = models.ForeignKey(
@@ -47,6 +49,10 @@ class AnswerChoice(models.Model):
 
 
 class ExamAttempt(models.Model):
+    class Status(models.TextChoices):
+        IN_PROGRESS = "IN_PROGRESS", "In progress"
+        SUBMITTED = "SUBMITTED", "Submitted"
+
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
@@ -57,11 +63,31 @@ class ExamAttempt(models.Model):
         on_delete=models.CASCADE,
         related_name="attempts"
     )
-    full_mark = models.PositiveSmallIntegerField()
-    user_mark = models.PositiveSmallIntegerField()
+
+    status = models.CharField(
+        max_length=20,
+        choices=Status.choices,
+        default=Status.IN_PROGRESS,
+    )
+
+    started_at = models.DateTimeField(auto_now_add=True)
+    submitted_at = models.DateTimeField(null=True, blank=True)
+
+    full_mark = models.PositiveSmallIntegerField(default=0)
+    user_mark = models.PositiveSmallIntegerField(default=0)
 
     def __str__(self):
-        return f"{self.user} - {self.exam}"
+        return f"{self.user} - {self.exam} ({self.status})"
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["user", "exam"],
+                condition=models.Q(status="IN_PROGRESS"),
+                name="unique_in_progress_attempt_per_user_exam",
+            )
+        ]
+
 
 class AttemptAnswer(models.Model):
     attempt = models.ForeignKey(
@@ -95,3 +121,4 @@ class AttemptAnswer(models.Model):
 
     def __str__(self):
         return f"{self.attempt} - Q{self.question.order}"
+

@@ -1,9 +1,12 @@
-from django.shortcuts import get_object_or_404
+from django.db import transaction
+from django.db.models import Sum
+from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse_lazy
+from django.views import View
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView, DetailView
 from django.contrib.auth.mixins import LoginRequiredMixin
 
-from .models import Exam, Question, AnswerChoice
+from .models import Exam, Question, AnswerChoice, ExamAttempt, AttemptAnswer
 from .forms import ExamForm, QuestionForm, ChoiceForm
 
 
@@ -152,3 +155,107 @@ class ChoiceDeleteView(DeleteView):
 
     def get_success_url(self):
         return reverse_lazy("exams:exam_detail", kwargs={"pk": self.object.question.exam.pk})
+
+class StartExamAttemptView(LoginRequiredMixin, View):
+    @transaction.atomic
+    def get(self, request, exam_id):
+        exam = get_object_or_404(Exam, pk=exam_id)
+
+        attempt, created = ExamAttempt.objects.get_or_create(
+            user=request.user,
+            exam=exam,
+            status=ExamAttempt.Status.IN_PROGRESS,
+            defaults={
+                "full_mark": exam.questions.aggregate(
+                    total=Sum("mark")
+                )["total"] or 0,
+                "user_mark": 0,
+            },
+        )
+
+        return redirect(
+            "exams:attempt_take",
+            attempt_id=attempt.id,
+        )
+
+class TakeExamView(LoginRequiredMixin, View):
+    template_name = "exams/attempt_take.html"
+
+    def get(self, request, attempt_id):
+        attempt = get_object_or_404(
+            ExamAttempt,
+            pk=attempt_id,
+            user=request.user,
+        )
+
+        # If already submitted, don't allow editing
+        if attempt.status == ExamAttempt.Status.SUBMITTED:
+            return redirect("exams:attempt_result", attempt_id=attempt.id)  # Step 4 later
+
+        questions = attempt.exam.questions.prefetch_related("choices").all()
+
+        # existing answers for pre-selecting radios
+        answers_map = {
+            a.question_id: a.selected_choice_id
+            for a in attempt.answers.select_related("selected_choice").all()
+        }
+
+        return render(request, self.template_name, {
+            "attempt": attempt,
+            "exam": attempt.exam,
+            "questions": questions,
+            "answers_map": answers_map,
+        })
+
+    @transaction.atomic
+    def post(self, request, attempt_id):
+        attempt = get_object_or_404(
+            ExamAttempt,
+            pk=attempt_id,
+            user=request.user,
+        )
+
+        if attempt.status == ExamAttempt.Status.SUBMITTED:
+            return redirect("exams:attempt_result", attempt_id=attempt.id)  # Step 4 later
+
+        questions = attempt.exam.questions.prefetch_related("choices").all()
+
+        # Save/update answers
+        for q in questions:
+            key = f"q_{q.id}"
+            choice_id = request.POST.get(key)
+
+            if not choice_id:
+                # user left it unanswered
+                AttemptAnswer.objects.update_or_create(
+                    attempt=attempt,
+                    question=q,
+                    defaults={
+                        "selected_choice": None,
+                        "is_correct": False,
+                        "earned_mark": 0,
+                    },
+                )
+                continue
+
+            # Make sure the choice belongs to THIS question (security check)
+            choice = get_object_or_404(AnswerChoice, pk=choice_id, question=q)
+
+            is_correct = choice.is_correct
+            earned = q.mark if is_correct else 0
+
+            AttemptAnswer.objects.update_or_create(
+                attempt=attempt,
+                question=q,
+                defaults={
+                    "selected_choice": choice,
+                    "is_correct": is_correct,
+                    "earned_mark": earned,
+                },
+            )
+
+        # Optional: update current running mark (not final submit yet)
+        attempt.user_mark = attempt.answers.aggregate(total=Sum("earned_mark"))["total"] or 0
+        attempt.save(update_fields=["user_mark"])
+
+        return redirect("exams:attempt_take", attempt_id=attempt.id)
