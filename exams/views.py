@@ -188,17 +188,14 @@ class TakeExamView(LoginRequiredMixin, View):
             user=request.user,
         )
 
-        # If already submitted, don't allow editing
         if attempt.status == ExamAttempt.Status.SUBMITTED:
             return redirect("exams:attempt_result", attempt_id=attempt.id)  # Step 4 later
 
         questions = attempt.exam.questions.prefetch_related("choices").all()
 
-        # existing answers for pre-selecting radios
-        answers_map = {
-            a.question_id: a.selected_choice_id
-            for a in attempt.answers.select_related("selected_choice").all()
-        }
+        answers_map = dict(
+            attempt.answers.values_list("question_id", "selected_choice_id")
+        )
 
         return render(request, self.template_name, {
             "attempt": attempt,
