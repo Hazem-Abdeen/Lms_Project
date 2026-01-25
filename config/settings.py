@@ -125,4 +125,6 @@ STATIC_URL = 'static/'
 
 LOGIN_URL = "/admin/login/"
 LOGIN_REDIRECT_URL = "/exams/"
+LOGOUT_REDIRECT_URL = "/login/"
+
 

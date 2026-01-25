@@ -2,6 +2,7 @@ from django.db import transaction
 from django.db.models import Sum
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse_lazy
+from django.utils import timezone
 from django.views import View
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView, DetailView
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -63,6 +64,7 @@ class ExamDetailView(DetailView):
     def get_queryset(self):
         return Exam.objects.select_related("course")
 
+
 class QuestionCreateView(CreateView):
     model = Question
     form_class = QuestionForm
@@ -107,6 +109,7 @@ class QuestionDeleteView(DeleteView):
 
     def get_success_url(self):
         return reverse_lazy("exams:exam_detail", kwargs={"pk": self.object.exam.pk})
+
 
 class ChoiceCreateView(CreateView):
     model = AnswerChoice
@@ -156,11 +159,22 @@ class ChoiceDeleteView(DeleteView):
     def get_success_url(self):
         return reverse_lazy("exams:exam_detail", kwargs={"pk": self.object.question.exam.pk})
 
+
 class StartExamAttemptView(LoginRequiredMixin, View):
-    @transaction.atomic
     def get(self, request, exam_id):
         exam = get_object_or_404(Exam, pk=exam_id)
 
+        # BLOCK if already submitted
+        submitted = ExamAttempt.objects.filter(
+            user=request.user,
+            exam=exam,
+            status=ExamAttempt.Status.SUBMITTED
+        ).first()
+
+        if submitted:
+            return redirect("exams:attempt_result", attempt_id=submitted.id)
+
+        # otherwise continue or resume
         attempt, created = ExamAttempt.objects.get_or_create(
             user=request.user,
             exam=exam,
@@ -173,10 +187,9 @@ class StartExamAttemptView(LoginRequiredMixin, View):
             },
         )
 
-        return redirect(
-            "exams:attempt_take",
-            attempt_id=attempt.id,
-        )
+        return redirect("exams:attempt_take", attempt_id=attempt.id)
+
+
 
 class TakeExamView(LoginRequiredMixin, View):
     template_name = "exams/attempt_take.html"
@@ -189,7 +202,7 @@ class TakeExamView(LoginRequiredMixin, View):
         )
 
         if attempt.status == ExamAttempt.Status.SUBMITTED:
-            return redirect("exams:attempt_result", attempt_id=attempt.id)  # Step 4 later
+            return redirect("exams:attempt_result", attempt_id=attempt.id)
 
         questions = attempt.exam.questions.prefetch_related("choices").all()
 
@@ -213,17 +226,15 @@ class TakeExamView(LoginRequiredMixin, View):
         )
 
         if attempt.status == ExamAttempt.Status.SUBMITTED:
-            return redirect("exams:attempt_result", attempt_id=attempt.id)  # Step 4 later
+            return redirect("exams:attempt_result", attempt_id=attempt.id)
 
         questions = attempt.exam.questions.prefetch_related("choices").all()
 
-        # Save/update answers
         for q in questions:
             key = f"q_{q.id}"
             choice_id = request.POST.get(key)
 
             if not choice_id:
-                # user left it unanswered
                 AttemptAnswer.objects.update_or_create(
                     attempt=attempt,
                     question=q,
@@ -235,7 +246,6 @@ class TakeExamView(LoginRequiredMixin, View):
                 )
                 continue
 
-            # Make sure the choice belongs to THIS question (security check)
             choice = get_object_or_404(AnswerChoice, pk=choice_id, question=q)
 
             is_correct = choice.is_correct
@@ -251,8 +261,58 @@ class TakeExamView(LoginRequiredMixin, View):
                 },
             )
 
-        # Optional: update current running mark (not final submit yet)
+        # update total ONCE
         attempt.user_mark = attempt.answers.aggregate(total=Sum("earned_mark"))["total"] or 0
         attempt.save(update_fields=["user_mark"])
 
         return redirect("exams:attempt_take", attempt_id=attempt.id)
+
+
+class SubmitAttemptView(LoginRequiredMixin, View):
+    @transaction.atomic
+    def post(self, request, attempt_id):
+        attempt = get_object_or_404(ExamAttempt, pk=attempt_id, user=request.user)
+
+        if attempt.status == ExamAttempt.Status.SUBMITTED:
+            return redirect("exams:attempt_result", attempt_id=attempt.id)
+
+        total = attempt.answers.aggregate(total=Sum("earned_mark"))["total"] or 0
+
+        attempt.user_mark = total
+        attempt.status = ExamAttempt.Status.SUBMITTED
+        attempt.submitted_at = timezone.now()
+        attempt.save(update_fields=["user_mark", "status", "submitted_at"])
+
+        return redirect("exams:attempt_result", attempt_id=attempt.id)
+
+
+class AttemptResultView(LoginRequiredMixin, View):
+    template_name = "exams/attempt_result.html"
+
+    def get(self, request, attempt_id):
+        attempt = get_object_or_404(ExamAttempt, pk=attempt_id, user=request.user)
+
+        if attempt.status != ExamAttempt.Status.SUBMITTED:
+            return redirect("exams:attempt_take", attempt_id=attempt.id)
+
+        questions = attempt.exam.questions.prefetch_related("choices").all()
+
+        answers = (
+            AttemptAnswer.objects
+            .filter(attempt=attempt)
+            .select_related("question", "selected_choice")
+        )
+        answers_map = {a.question_id: a for a in answers}
+
+        correct_map = {
+            q.id: next((c for c in q.choices.all() if c.is_correct), None)
+            for q in questions
+        }
+
+        return render(request, self.template_name, {
+            "attempt": attempt,
+            "exam": attempt.exam,
+            "questions": questions,
+            "answers_map": answers_map,
+            "correct_map": correct_map,
+        })

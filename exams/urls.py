@@ -2,7 +2,7 @@ from django.urls import path
 from .views import (
     ExamListView, ExamCreateView, ExamDetailView, ExamUpdateView, ExamDeleteView,
     QuestionCreateView, QuestionUpdateView, QuestionDeleteView, ChoiceCreateView, ChoiceUpdateView, ChoiceDeleteView,
-    StartExamAttemptView, TakeExamView
+    StartExamAttemptView, TakeExamView, SubmitAttemptView, AttemptResultView
 )
 
 app_name = "exams"
@@ -26,4 +26,6 @@ urlpatterns = [
 
     path("<int:exam_id>/start/",StartExamAttemptView.as_view(),name="attempt_start",),
     path("attempts/<int:attempt_id>/take/",TakeExamView.as_view(),name="attempt_take",),
+    path("attempt/<int:attempt_id>/submit/", SubmitAttemptView.as_view(), name="attempt_submit"),
+    path("attempt/<int:attempt_id>/result/", AttemptResultView.as_view(), name="attempt_result"),
 ]

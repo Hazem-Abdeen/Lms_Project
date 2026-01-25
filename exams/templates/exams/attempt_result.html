@@ -1,0 +1,72 @@
+{% extends "courses/base.html" %}
+{% load exam_extras %}
+
+{% block title %}Exam Result{% endblock %}
+{% block topbar_left %}Exam Result{% endblock %}
+
+{% block content %}
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+      <h3 class="mb-0">{{ exam.title }}</h3>
+      <div class="text-muted small">
+        Attempt #{{ attempt.id }} • Submitted: {{ attempt.submitted_at }}
+      </div>
+      <div class="mt-1">
+        <span class="badge text-bg-primary">
+          Score: {{ attempt.user_mark }} / {{ attempt.full_mark }}
+        </span>
+      </div>
+    </div>
+    <a class="btn btn-outline-secondary" href="{% url 'exams:exam_list' %}">
+  Back to Exams
+</a>
+  </div>
+
+  <div class="card">
+    <div class="card-body">
+      {% for q in questions %}
+        {% with ans=answers_map|get_item:q.id %}
+        {% with cor=correct_map|get_item:q.id %}
+          <div class="mb-4">
+            <div class="fw-semibold mb-2">
+              Q{{ q.order }} — {{ q.mark }} marks
+            </div>
+            <div class="text-muted mb-2">{{ q.text }}</div>
+
+            <div class="mb-1">
+              <span class="fw-semibold">Your answer:</span>
+              {% if ans and ans.selected_choice %}
+                {{ ans.selected_choice.text }}
+                {% if ans.is_correct %}
+                  <span class="badge text-bg-success ms-2">Correct</span>
+                {% else %}
+                  <span class="badge text-bg-danger ms-2">Wrong</span>
+                {% endif %}
+              {% else %}
+                <span class="text-muted"><i>No answer</i></span>
+                <span class="badge text-bg-danger ms-2">Wrong</span>
+              {% endif %}
+            </div>
+
+            <div class="mb-1">
+              <span class="fw-semibold">Correct answer:</span>
+              {% if cor %}
+                {{ cor.text }}
+              {% else %}
+                <span class="text-muted"><i>Not set</i></span>
+              {% endif %}
+            </div>
+
+            <div class="small text-muted">
+              Earned: {% if ans %}{{ ans.earned_mark }}{% else %}0{% endif %} / {{ q.mark }}
+            </div>
+          </div>
+          <hr>
+        {% endwith %}
+        {% endwith %}
+      {% empty %}
+        <div class="text-muted">No questions found for this exam.</div>
+      {% endfor %}
+    </div>
+  </div>
+{% endblock %}
