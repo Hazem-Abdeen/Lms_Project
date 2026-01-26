@@ -50,10 +50,13 @@
 
 
     <div class="sidebar-footer">
-        <a class="sidebar-link danger" href="{% url 'logout' %}">
-        <i class="bi bi-box-arrow-right"></i>
-        <span>Logout</span>
-        </a>
+        <form method="post" action="{% url 'logout' %}">
+            {% csrf_token %}
+            <button type="submit" class="sidebar-link danger btn btn-link p-0">
+            <i class="bi bi-box-arrow-right"></i>
+            <span>Logout</span>
+            </button>
+        </form>
     </div>
   </aside>
 

@@ -190,7 +190,6 @@ class StartExamAttemptView(LoginRequiredMixin, View):
         return redirect("exams:attempt_take", attempt_id=attempt.id)
 
 
-
 class TakeExamView(LoginRequiredMixin, View):
     template_name = "exams/attempt_take.html"
 
