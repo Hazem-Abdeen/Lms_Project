@@ -20,11 +20,6 @@ class CourseCreateView(CreateView):
     def get_success_url(self):
         return reverse("courses:course-list")
 
-    def get_context_data(self, **kwargs):
-        ctx = super().get_context_data(**kwargs)
-        ctx["cancel_url"] = reverse("courses:course-list")
-        return ctx
-
 
 class UnitListView(ListView):
     model = Unit
@@ -38,7 +33,6 @@ class UnitListView(ListView):
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         ctx["course"] = self.course
-        ctx["cancel_url"] = reverse("courses:unit-list", args=[self.course.id])
         return ctx
 
 
