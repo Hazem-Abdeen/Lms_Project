@@ -40,7 +40,7 @@
                   {{ exam.title }}
                 </a>
               </td>
-              <td>{{ exam.total_marks|default:"-" }}</td>
+              <td>{{ exam.total_marks|default:"-" }} ------- yazan total marks {{ exam.total_marks1 }}</td>
               <td class="text-end">
                 <a class="btn btn-sm btn-outline-primary"
                    href="{% url 'exams:exam_update' exam.id %}">

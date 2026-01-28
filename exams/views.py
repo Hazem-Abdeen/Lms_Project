@@ -194,6 +194,7 @@ class TakeExamView(LoginRequiredMixin, View):
     template_name = "exams/attempt_take.html"
 
     def get(self, request, attempt_id):
+        # fetches one ExamAttempt object belong the user
         attempt = get_object_or_404(
             ExamAttempt,
             pk=attempt_id,

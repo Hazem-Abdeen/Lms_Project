@@ -1,7 +1,5 @@
 from django.conf import settings
-from django.core.exceptions import ValidationError
 from django.db import models
-from django.utils import timezone
 
 
 class Exam(models.Model):
@@ -15,6 +13,11 @@ class Exam(models.Model):
 
     def __str__(self):
         return self.title
+
+    #computed field
+    @property
+    def total_marks1(self):
+        return self.questions.all().aggregate(sum=models.Sum('mark'))['sum'] or 0
 
 
 class Question(models.Model):
@@ -52,6 +55,10 @@ class ExamAttempt(models.Model):
     class Status(models.TextChoices):
         IN_PROGRESS = "IN_PROGRESS", "In progress"
         SUBMITTED = "SUBMITTED", "Submitted"
+    # STATUS_CHOICES = (
+    #     ('IN_PROGRESS', 'In progress'),
+    #     ('SUBMITTED', 'Submitted'),
+    # )
 
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -121,4 +128,3 @@ class AttemptAnswer(models.Model):
 
     def __str__(self):
         return f"{self.attempt} - Q{self.question.order}"
-

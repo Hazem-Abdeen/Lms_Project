@@ -1,12 +1,5 @@
 {% extends "courses/base.html" %}
 
-{% block title %}
-  {% if mode == "create" %}Add Choice{% else %}Edit Choice{% endif %}
-{% endblock %}
-{% block topbar_left %}
-  {% if mode == "create" %}Add Choice{% else %}Edit Choice{% endif %}
-{% endblock %}
-
 {% block content %}
   <div class="mb-3">
     <h2 class="mb-0">{% if mode == "create" %}Add Choice{% else %}Edit Choice{% endif %}</h2>
